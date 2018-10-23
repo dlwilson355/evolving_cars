@@ -2,8 +2,8 @@
 <html>
 <head>
     <title>Evolving car shapes</title>
-    <script src="js/p2.min.js"></script>
-    <script src="js/p2.renderer.min.js"></script>
+    <script src="js/p2.js"></script>
+    <script src="js/p2.renderer.js"></script>
     <script src="js/cars.js"></script>
     <link href="css/cars.css" rel="stylesheet"/>
     <meta charset="utf-8">
@@ -11,7 +11,15 @@
 </head>
 <body>
     <script>
+        var cars_to_remove = [];
+        var interval = true;
+
         var app = new p2.WebGLRenderer(function() {
+            console.log('New game');
+
+            this.paused = false;
+            var game_finished = false;
+
             // Create a World
             var world = new p2.World({
                 gravity: [0,-10] // Set gravity to -10 in y direction
@@ -20,36 +28,155 @@
             world.defaultContactMaterial.friction = 100;
             this.setWorld(world);
 
-            var track = new Track(100);
+            // Create a Track
+            var track = new Track(10);
             track.add_to_world(world);
 
+            // Create cars
             var cars = []
-            for (var i = 0; i < 2; ++i) {
+            for (var i = 0; i < 10; ++i) {
                 var car = new Car({
                     radius_bw: 0.2,
                     radius_fw: 0.2,
-                    length: Math.random(),
-                    speed: i == 1 ? 5 : 4
+                    length: 0.7, //Math.random(),
+                    speed: i == 1 ? 5 : 2
                 });
                 car.add_to_world(world);
-                cars.push(car);
+                cars.push({
+                    "car": car,
+                    "last_pos": car.get_position[0] // to check if the car's stuck
+                });
             }
 
-            this.frame(0, 0, 8, 6);
+            // copy cars array. it's our population
+            // we will be deleting from cars, that's why .slice()
+            this.cars = cars.slice();
 
-            this.followBody = cars[0].get_center_body();
+            // App settings
+            this.frame(0, 0, 10, 10);
+            this.gui.closed = true;
 
-            world.on('preSolve', function (evt) {
-                for (var i = 0; i < evt.contactEquations.length; ++i){
-                    var eq = evt.contactEquations[i];
+            // Event listeners
+            world.on("beginContact", function (event) {
+                // We cannot remove the body here since the world is still stepping.
+                // Instead, schedule the body to be removed after the step is done.
+                if (track.bucket.includes(event.bodyA) || track.bucket.includes(event.bodyB)) {
+                    var car_ix = -1;
+                    for (var j = 0; j < cars.length; j++) {
+                        car = cars[j]["car"];
+                        if (car.has_body(event.bodyA) || car.has_body(event.bodyB)) {
+                            car_ix = j;
+                            break;
+                        }
+                    }
+                    cars_to_remove.push(cars[car_ix]["car"]);
+                    cars.splice(car_ix, 1);
+                }
+            });
+
+            world.on("postStep", function (event) {
+                // If car finished
+                for (var i = 0; i < cars_to_remove.length; i++) {
+                    // Remove the body from the world.
+                    remove_car = cars_to_remove[i];
+                    remove_car.remove_from_world();
+                }
+
+                // find the first car to follow
+                first_car_ix = 0;
+                for (var i = 1; i < cars.length; i++) {
+                    pos1 = cars[first_car_ix]["car"].get_position()[0];
+                    pos2 = cars[i]["car"].get_position()[0];
+                    if (pos2 > pos1) {
+                        first_car_ix = i;
+                    }
+                }
+
+                // follow the 1st car or reset the game if no cars left
+                if (cars.length == 0) {
+                    // The game has ended! Restart!
+                    app.finish_game();
+                } else {
+                    app.followBody = cars[first_car_ix]["car"].get_center_body();
+                }
+            });
+
+            world.on("preSolve", function (event) {
+                for (var i = 0; i < event.contactEquations.length; i++){
+                    var eq = event.contactEquations[i];
                     eq.enabled = track.notIgnore.includes(eq.bodyA) || track.notIgnore.includes(eq.bodyB);
                 }
-                for (var i=0; i<evt.frictionEquations.length; i++){
-                    var eq = evt.frictionEquations[i];
+                for (var i=0; i<event.frictionEquations.length; i++){
+                    var eq = event.frictionEquations[i];
                     eq.enabled = track.notIgnore.includes(eq.bodyA) || track.notIgnore.includes(eq.bodyB);
                 }
             });
+
+            function check_stuck_cars() {
+                for (var i = 0; i < cars.length; i++) {
+                    pos = cars[i]["car"].get_position()[0];
+                    last_pos = cars[i]["last_pos"];
+                    if (Math.abs(pos - last_pos) < 0.01) {
+                        cars_to_remove.push(cars[i]["car"]);
+                        cars.splice(i, 1);
+                    } else {
+                        cars[i]["last_pos"] = pos;
+                    }
+                }
+            }
+
+            // Go to the next step of the world
+            this.next_step = function() {
+                this.settings['manualStep [s]']();
+            }
+
+            this.finish_game  = function() {
+                if (game_finished) {
+                    return;
+                }
+                game_finished = true;
+
+                // check_stuck_cars();
+                while (true) {
+                    for (var i = 0; i < 100; i++) {
+                        this.next_step();
+                    }
+                    var flag = false;
+                    for (var i = 0; i < this.cars.length; i++) {
+                        if (!this.cars[i]["car"].removed) {
+                            flag = true;
+                            break;
+                        }
+                    }
+                    if (flag) continue;
+                    break;
+                }
+                console.log('Game over');
+                this.paused = true;
+                this.do_evolution();
+            }
+
+            this.do_evolution = function() {
+                for (var i = 0; i < this.cars.length; i++) {
+                    console.log(this.cars[i]["car"].get_position());
+                }
+                this.new_game();
+            }
+
+            this.new_game = function() {
+                this.setSceneByIndex(0);
+            }
+
+            // Remove stuck cars each 1 sec
+            setInterval(check_stuck_cars, 1000);
         });
+
+        document.onkeydown = function(evt) {
+            evt = evt || window.event;
+            if (evt.keyCode == 32) { // space
+                app.finish_game();
+            }
+        };
     </script>
 </body>
 </html>

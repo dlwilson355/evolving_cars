@@ -1,4 +1,4 @@
-MAX_ANGLE_DEG = 10;
+MAX_ANGLE_DEG = 0;
 MAX_ANGLE_RAD = MAX_ANGLE_DEG * Math.PI / 180;
 
 
@@ -22,14 +22,19 @@ class Track {
         var lines = [];
         var last_x = 0;
         var last_y = 0;
+
+        var line = new Line(last_x, last_y, 1, 0);
+        lines.push(line);
         for (var i = 0; i < numberOfLines; i++){
-            var angle = Math.random() * 2 * MAX_ANGLE_RAD - MAX_ANGLE_RAD;
-            var line = new Line(last_x, last_y, 1, angle);
-            lines.push(line);
             var endpoint = line.get_endpoint();
             last_x = endpoint[0];
             last_y = endpoint[1];
+
+            var angle = Math.random() * 2 * MAX_ANGLE_RAD - MAX_ANGLE_RAD;
+            line = new Line(last_x, last_y, 1, angle);
+            lines.push(line);
         }
+
         this.lines = lines;
     }
 
@@ -45,6 +50,9 @@ class Track {
             notIgnore.push(body);
         }
         this.notIgnore = notIgnore;
+        // bucket is the first and the last platforms
+        // it is called bucket by historical reasons =)
+        this.bucket = notIgnore.slice(0, 1).concat(notIgnore.slice(-1));
     }
 }
 
@@ -97,6 +105,8 @@ class CarChassisLine {
         revolute.setMotorSpeed(wheel.speed);
 
         this.world.addConstraint(revolute);
+
+        this.back_revolute = revolute;
     }
 
     attach_front_wheel(wheel) {
@@ -106,6 +116,8 @@ class CarChassisLine {
             collideConnected: false
         });
         this.world.addConstraint(revolute);
+
+        this.front_revolute = revolute;
     }
 }
 
@@ -143,12 +155,14 @@ class Car {
         if ("speed" in options) {
             this.speed = options["speed"]
         }
+        this.removed = false;
     }
 
     add_to_world(world) {
         this.world = world;
 
-        var car_position = [1, 1];
+        // x=2 not to hit the first platform
+        var car_position = [2, 0.5];
         var chassis_height = 0.05;
 
         // Create chassis for our car
@@ -177,6 +191,26 @@ class Car {
         chassis.attach_back_wheel(back_wheel);
 
         this.chassis = chassis;
+        this.back_wheel = back_wheel;
+        this.front_wheel = front_wheel;
+    }
+
+    remove_from_world() {
+        this.world.removeConstraint(this.chassis.back_revolute);
+        this.world.removeConstraint(this.chassis.front_revolute);
+        this.world.removeBody(this.chassis.body);
+        this.world.removeBody(this.back_wheel.body);
+        this.world.removeBody(this.front_wheel.body);
+
+        this.removed = true;
+    }
+
+    has_body(body) {
+        return [this.chassis.body, this.back_wheel.body, this.front_wheel.body].includes(body)
+    }
+
+    get_position() {
+        return this.chassis.body.position;
     }
 
     // To fix the camera
