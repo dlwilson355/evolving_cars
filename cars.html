@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Evolving car shapes</title>
+    <script src="js/p2.min.js"></script>
+    <script src="js/p2.renderer.min.js"></script>
+    <script src="js/cars.js"></script>
+    <link href="css/cars.css" rel="stylesheet"/>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+</head>
+<body>
+    <script>
+        var app = new p2.WebGLRenderer(function() {
+            // Create a World
+            var world = new p2.World({
+                gravity: [0,-10] // Set gravity to -10 in y direction
+            });
+            // Set high friction so the wheels don't slip
+            world.defaultContactMaterial.friction = 100;
+            this.setWorld(world);
+
+            var track = new Track(100);
+            track.add_to_world(world);
+
+            var cars = []
+            for (var i = 0; i < 2; ++i) {
+                var car = new Car({
+                    radius_bw: 0.2,
+                    radius_fw: 0.2,
+                    length: Math.random(),
+                    speed: i == 1 ? 5 : 4
+                });
+                car.add_to_world(world);
+                cars.push(car);
+            }
+
+            this.frame(0, 0, 8, 6);
+
+            this.followBody = cars[0].get_center_body();
+
+            world.on('preSolve', function (evt) {
+                for (var i = 0; i < evt.contactEquations.length; ++i){
+                    var eq = evt.contactEquations[i];
+                    eq.enabled = track.notIgnore.includes(eq.bodyA) || track.notIgnore.includes(eq.bodyB);
+                }
+                for (var i=0; i<evt.frictionEquations.length; i++){
+                    var eq = evt.frictionEquations[i];
+                    eq.enabled = track.notIgnore.includes(eq.bodyA) || track.notIgnore.includes(eq.bodyB);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
