@@ -1,5 +1,9 @@
-MAX_ANGLE_DEG = 0;
+MAX_ANGLE_DEG = 10;
 MAX_ANGLE_RAD = MAX_ANGLE_DEG * Math.PI / 180;
+
+var WHEEL = Math.pow(2,0), // 00000000000000000000000000000001 in binary
+    CHASSIS =  Math.pow(2,1), // 00000000000000000000000000000010 in binary
+    TRACK = Math.pow(2,2)  // 00000000000000000000000000000100 in binary
 
 
 class Line {
@@ -34,6 +38,8 @@ class Track {
             line = new Line(last_x, last_y, 1, angle);
             lines.push(line);
         }
+        var endpoint = line.get_endpoint();
+        lines.push(new Line(endpoint[0], endpoint[1], 1, 0));
 
         this.lines = lines;
     }
@@ -42,6 +48,9 @@ class Track {
         var notIgnore = [];
         for (var i = 0; i < this.lines.length; i++) {
             var line = new p2.Box({width: this.lines[i].length, height: .1});
+            line.collisionGroup = TRACK;
+            line.collisionMask = CHASSIS | WHEEL;
+
             var body = new p2.Body({position: [this.lines[i].x, this.lines[i].y],
                                 angle: this.lines[i].angle});
             body.addShape(line);
@@ -71,6 +80,8 @@ class CarChassisLine {
             width: this.length,
             height: this.height
         });
+        this.shape.collisionGroup = CHASSIS;
+        this.shape.collisionMask = TRACK;
         this.body.addShape(this.shape);
     }
 
@@ -110,6 +121,9 @@ class CarChassisLine {
     }
 
     attach_front_wheel(wheel) {
+        // make the front wheel heavier so that it can't be
+        // pushed up by high speed of the back wheel
+        wheel.body.mass = 5;
         var revolute = new p2.RevoluteConstraint(this.body, wheel.body, {
             localPivotA: [0.5 * this.length, 0],
             localPivotB: [0, 0],
@@ -136,6 +150,8 @@ class CarWheel {
             position: this.position
         });
         this.shape = new p2.Circle({radius: this.radius});
+        this.shape.collisionGroup = WHEEL;
+        this.shape.collisionMask = TRACK;
         this.body.addShape(this.shape);
     }
 
@@ -193,6 +209,8 @@ class Car {
         this.chassis = chassis;
         this.back_wheel = back_wheel;
         this.front_wheel = front_wheel;
+
+        this.bodies = [this.chassis.body, this.back_wheel.body, this.front_wheel.body]
     }
 
     remove_from_world() {
@@ -206,7 +224,7 @@ class Car {
     }
 
     has_body(body) {
-        return [this.chassis.body, this.back_wheel.body, this.front_wheel.body].includes(body)
+        return this.bodies.includes(body)
     }
 
     get_position() {
