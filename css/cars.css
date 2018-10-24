@@ -5,3 +5,52 @@ html,body {
     height:100%;
     overflow: hidden;
 }
+
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(255,255,255,0.9); /* Black w/ opacity */
+}
+
+.modal-content {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+.centered-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 152px;
+    width: 152px;
+}
+
+.loader {
+    border-top: 16px solid turquoise;
+    border-right: 16px solid greenyellow;
+    border-bottom: 16px solid coral;
+    border-left: 16px solid pink;
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    z-index: 1;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

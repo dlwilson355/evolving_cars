@@ -12,6 +12,13 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 </head>
 <body>
+    <div id="loading-circle" class="modal">
+        <div class="modal-content">
+            <div class="centered-text">Skipping...</div>
+            <div class="loader"></div>
+        </div>
+    </div>
+
     <script>
         var cars_options = initial_population();
         var app = new p2.WebGLRenderer(function() {
@@ -62,7 +69,6 @@
             // App set-up
             // ---------------
             this.frame(0, 0, 10, 10);
-            this.gui.closed = true;
 
             this.check_stuck_cars = function() {
                 for (var i = 0; i < cars_info.length; i++) {
@@ -160,14 +166,61 @@
             });
         });
 
-        document.onkeydown = function(evt) {
-            evt = evt || window.event;
-            if (evt.key == " ") { // space
-                app.finish_game();
-            } else if (evt.key == 'f') {
-                for (var i = 0; i < 5; i++) {
+        // ------------------------------
+        // Page settings
+        // ------------------------------
+        var modal = document.getElementById("loading-circle");
+
+        function skip_game_iterations(skips=1) {
+            modal.style.display = "block";
+            // timeout is for modal to open
+            setTimeout(function(){
+                for (var i = 0; i < skips; i++) {
                     app.finish_game();
                 }
+                modal.style.display = "none";
+            }, 50);
+        }
+
+        // ------------------------------
+        // Set-up Controls side menu
+        // ------------------------------
+        // app.gui.closed = true;
+
+        // Delete all menu items
+        var folders = app.gui.domElement.children[1];
+        while (folders.firstChild) {
+            folders.removeChild(folders.firstChild);
+        }
+
+        // Create out own menu item
+        var game_folder = app.gui.addFolder("Game");
+        game_folder.open();
+
+        // Set up number of iterations to skip
+        skip_num_label = "Iterations to skip";
+        app.settings[skip_num_label] = 1;
+        game_folder.add(app.settings, skip_num_label, 1, 100).step(1);
+
+        skip_label = "Skip iterations";
+        app.settings[skip_label] = function() {
+            skip_game_iterations(app.settings[skip_num_label]);
+        };
+        game_folder.add(app.settings, skip_label);
+
+        game_folder.add(app.settings, "paused [p]").onChange(function(p) {
+            app.paused = p;
+        });
+
+        // ------------------------------
+        // Key press handler
+        // ------------------------------
+        document.onkeydown = function(evt) {
+            evt = evt || window.event;
+            switch (evt.code) {
+            case "Space":
+                app.settings[skip_label]();
+                break;
             }
         };
     </script>
