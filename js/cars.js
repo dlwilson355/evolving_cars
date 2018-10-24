@@ -1,5 +1,4 @@
-MAX_ANGLE_DEG = 10;
-MAX_ANGLE_RAD = MAX_ANGLE_DEG * Math.PI / 180;
+MAX_ANGLE_RAD = TRACK_MAX_ANGLE_DEG * Math.PI / 180;
 
 var WHEEL = Math.pow(2,0), // 00000000000000000000000000000001 in binary
     CHASSIS =  Math.pow(2,1), // 00000000000000000000000000000010 in binary
@@ -7,7 +6,7 @@ var WHEEL = Math.pow(2,0), // 00000000000000000000000000000001 in binary
 
 
 class Line {
-    constructor(x, y, length=10, angle=0) {
+    constructor(x, y, length=1, angle=0) {
         this.x = x + length * Math.cos(angle) / 2;
         this.y = y + length * Math.sin(angle) / 2;
         this.length = length;
@@ -30,22 +29,20 @@ class Track {
         var line = new Line(last_x, last_y, 1, 0);
         lines.push(line);
         for (var i = 0; i < numberOfLines; i++){
-            var endpoint = line.get_endpoint();
-            last_x = endpoint[0];
-            last_y = endpoint[1];
+            [last_x, last_y] = line.get_endpoint();
 
             var angle = Math.random() * 2 * MAX_ANGLE_RAD - MAX_ANGLE_RAD;
             line = new Line(last_x, last_y, 1, angle);
             lines.push(line);
         }
-        var endpoint = line.get_endpoint();
-        lines.push(new Line(endpoint[0], endpoint[1], 1, 0));
+        [last_x, last_y] = line.get_endpoint();
+        lines.push(new Line(last_x, last_y, 1, 0));
 
         this.lines = lines;
     }
 
     add_to_world(world) {
-        var notIgnore = [];
+        this.edges = []
         for (var i = 0; i < this.lines.length; i++) {
             var line = new p2.Box({width: this.lines[i].length, height: .1});
             line.collisionGroup = TRACK;
@@ -56,12 +53,10 @@ class Track {
             body.addShape(line);
             world.addBody(body);
 
-            notIgnore.push(body);
+            if (i == 0 || i == this.lines.length - 1) {
+                this.edges.push(body);
+            }
         }
-        this.notIgnore = notIgnore;
-        // bucket is the first and the last platforms
-        // it is called bucket by historical reasons =)
-        this.bucket = notIgnore.slice(0, 1).concat(notIgnore.slice(-1));
     }
 }
 
