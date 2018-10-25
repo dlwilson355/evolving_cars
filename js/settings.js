@@ -1,5 +1,5 @@
 TRACK_LENGTH = 100;
-TRACK_MAX_ANGLE_DEG = 0;
+TRACK_MAX_ANGLE_DEG = 15;
 POP_SIZE = 10;
 
 function initial_population() {

@@ -25,6 +25,7 @@
             console.log('New game');
 
             var game_start_time = Date.now();
+            var skip_start_time = 0;
 
             this.paused = false;
             var game_finished = false;
@@ -71,6 +72,10 @@
             this.frame(0, 0, 10, 10);
 
             this.check_stuck_cars = function() {
+                // this function doesn't see 'this'!!!
+                // as it is called from setInterval
+                if (app.paused) return;
+
                 for (var i = 0; i < cars_info.length; i++) {
                     pos = cars_info[i]["car"].get_position()[0];
                     last_pos = cars_info[i]["last_pos"];
@@ -87,7 +92,7 @@
                 this.settings['manualStep [s]']();
             }
 
-            this.finish_game  = function() {
+            this.finish_game = function() {
                 if (game_finished) {
                     return;
                 }
@@ -107,8 +112,23 @@
                 this.paused = true;
                 console.log('Game over');
                 console.log('Game duration (msec.):', Date.now() - game_start_time);
+                if (skip_start_time > 0) {
+                    console.log('Skip duration (msec.):', Date.now() - skip_start_time);
+                }
                 cars_options = do_evolution(cars_options);
                 this.new_game();
+            }
+
+            this.skip_game_iterations = function(skips=1) {
+                modal.style.display = "block";
+                // timeout is for modal to open
+                setTimeout(function(){
+                    for (var i = 0; i < skips; i++) {
+                        skip_start_time = Date.now();
+                        app.finish_game();
+                    }
+                    modal.style.display = "none";
+                }, 50);
             }
 
             this.new_game = function() {
@@ -171,16 +191,12 @@
         // ------------------------------
         var modal = document.getElementById("loading-circle");
 
-        function skip_game_iterations(skips=1) {
-            modal.style.display = "block";
-            // timeout is for modal to open
-            setTimeout(function(){
-                for (var i = 0; i < skips; i++) {
-                    app.finish_game();
-                }
-                modal.style.display = "none";
-            }, 50);
-        }
+        window.onblur = function() {
+            app.paused = true;
+        };
+        window.onfocus = function() {
+            app.paused = false;
+        };
 
         // ------------------------------
         // Set-up Controls side menu
@@ -204,7 +220,7 @@
 
         skip_label = "Skip iterations";
         app.settings[skip_label] = function() {
-            skip_game_iterations(app.settings[skip_num_label]);
+            app.skip_game_iterations(app.settings[skip_num_label]);
         };
         game_folder.add(app.settings, skip_label);
 
