@@ -350,8 +350,7 @@ class ConvexCar {
         this.world = world;
 
         // x=2 not to hit the first platform
-        var car_position = [4, 2];
-        var chassis_height = 0.05;
+        var car_position = [3, 1.2];
 
         // Create chassis for our car
         var chassis = new CarChassisConvex({
