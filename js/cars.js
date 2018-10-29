@@ -60,6 +60,105 @@ class Track {
     }
 }
 
+// A car chassis constructed from a convex object
+class CarChassisConvex {
+    constructor(options) {
+        this.position = options["position"];
+        if ("verticies" in options) {
+            this.vert = options["verticies"];
+        }
+        else {
+            this.vert = this.get_random_verticies();
+        }
+        this.vert = this.get_sorted_verticies();
+        this.body = new p2.Body({
+            mass: 1,
+            position: this.position
+        });
+        this.shape = new p2.Convex({ vertices: this.vert });
+        this.shape.collisionGroup = CHASSIS;
+        this.shape.collisionMask = TRACK;
+        this.body.addShape(this.shape);
+    }
+
+    // we select random verticies to determine the shape of the convex chassis
+    get_random_verticies() {
+        var size = 1;
+        var vertices = [];
+        for(var i=0, N=4; i<N; i++){
+            var a = 2*Math.PI / N * i;
+            var vertex = [Math.random()*size*Math.cos(a), Math.random()*size*Math.sin(a)]; // Note: vertices are added counter-clockwise
+            vertices.push(vertex);
+        }
+        return vertices
+    }
+
+    // we need to sort the verticies in counterclockwise order or else p2 throws an exception
+    get_sorted_verticies() {
+        var radians = [];
+        for (var i=0; i < this.vert.length; i++) {
+            var radian = Math.atan2(this.vert[i][1], this.vert[i][0]);
+            if (radian < 0) {
+                radian += 2*Math.PI;
+            }
+            radians.push(radian);
+        }
+        var sorted_verticies = [];
+        // TODO: potential issue if two radians are equal
+        for (var i=0; i < this.vert.length; i++) {
+            var index = radians.indexOf(Math.min.apply(Math, radians));
+            sorted_verticies.push(this.vert[index]);
+            radians[index] = 10;
+        }
+        return sorted_verticies
+    }
+
+    add_to_world(world) {
+        world.addBody(this.body);
+        this.world = world;
+    }
+
+        // To fix the camera
+    get_center_body() {
+        return this.body;
+    }
+
+    get_back_wheel_position() {
+        return [this.position[0] + this.vert[2][0], this.position[1] + this.vert[2][1]]
+    }
+
+    get_front_wheel_position() {
+        return [this.position[0] + this.vert[3][0], this.position[1] + this.vert[3][1]]
+    }
+
+    attach_back_wheel(wheel) {
+        var revolute = new p2.RevoluteConstraint(this.body, wheel.body, {
+            worldPivot: [this.position[0] + this.vert[2][0], this.position[1] + this.vert[2][1]],
+            collideConnected: false
+        });
+        revolute.enableMotor();
+        // Rotational speed in radians per second
+        revolute.setMotorSpeed(wheel.speed);
+
+        this.world.addConstraint(revolute);
+
+        this.back_revolute = revolute;
+    }
+
+    attach_front_wheel(wheel) {
+        // make the front wheel heavier so that it can't be
+        // pushed up by high speed of the back wheel
+        wheel.body.mass = 5;
+        var revolute = new p2.RevoluteConstraint(this.body, wheel.body, {
+            worldPivot: [this.position[0] + this.vert[3][0], this.position[1] + this.vert[3][1]],
+            collideConnected: false
+        });
+        this.world.addConstraint(revolute);
+
+        this.front_revolute = revolute;
+    }
+}
+
 
 class CarChassisLine {
     constructor(options) {
@@ -181,6 +280,82 @@ class Car {
             position: car_position,
             height: chassis_height,
             length: this.length
+        })
+        chassis.add_to_world(world);
+
+        // Create wheels
+        var back_wheel = new CarWheel({
+            position: chassis.get_back_wheel_position(),
+            radius: this.radius_bw,
+            speed: this.speed,
+        });
+        back_wheel.add_to_world(world);
+
+        var front_wheel = new CarWheel({
+            position: chassis.get_front_wheel_position(),
+            radius: this.radius_fw
+        });
+        front_wheel.add_to_world(world);
+
+        chassis.attach_front_wheel(front_wheel);
+        chassis.attach_back_wheel(back_wheel);
+
+        this.chassis = chassis;
+        this.back_wheel = back_wheel;
+        this.front_wheel = front_wheel;
+
+        this.bodies = [this.chassis.body, this.back_wheel.body, this.front_wheel.body]
+    }
+
+    remove_from_world() {
+        this.world.removeConstraint(this.chassis.back_revolute);
+        this.world.removeConstraint(this.chassis.front_revolute);
+        this.world.removeBody(this.chassis.body);
+        this.world.removeBody(this.back_wheel.body);
+        this.world.removeBody(this.front_wheel.body);
+
+        this.removed = true;
+    }
+
+    has_body(body) {
+        return this.bodies.includes(body)
+    }
+
+    get_position() {
+        return this.chassis.body.position;
+    }
+
+    // To fix the camera
+    get_center_body() {
+        return this.chassis.get_center_body();
+    }
+}
+
+// Daniel's new class for creating cars with convex chassis
+// I am leaving the regular car class for now.
+class ConvexCar {
+    constructor(options) {
+        // bw - back wheel, fw - front wheel
+        this.radius_bw = options["radius_bw"];
+        this.radius_fw = options["radius_fw"];
+        this.length = options["length"];
+        this.speed = 3;
+        if ("speed" in options) {
+            this.speed = options["speed"]
+        }
+        this.removed = false;
+    }
+
+    add_to_world(world) {
+        this.world = world;
+
+        // x=2 not to hit the first platform
+        var car_position = [4, 2];
+        var chassis_height = 0.05;
+
+        // Create chassis for our car
+        var chassis = new CarChassisConvex({
+            position: car_position,
         })
         chassis.add_to_world(world);
 
