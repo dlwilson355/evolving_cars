@@ -20,7 +20,8 @@
     </div>
 
     <script>
-        var cars_options = initial_population();
+        prev_parents = initial_population(POP_SIZE)
+        cars_options = prev_parents;
         var app = new p2.WebGLRenderer(function() {
             console.log('New game');
 
@@ -49,7 +50,7 @@
 
             // Create cars
             var cars_info = [];
-            for (var i = 0; i < cars_options.length-1; i++) {
+            for (var i = 0; i < cars_options.length; i++) {
                 var car = new ConvexCar(cars_options[i]);
                 car.add_to_world(world);
                 cars_info.push({

@@ -60,6 +60,7 @@ class Track {
     }
 }
 
+
 // A car chassis constructed from a convex object
 class CarChassisConvex {
     constructor(options) {
@@ -217,7 +218,7 @@ class CarChassisLine {
     attach_front_wheel(wheel) {
         // make the front wheel heavier so that it can't be
         // pushed up by high speed of the back wheel
-        wheel.body.mass = 5;
+        wheel.body.mass = 1;
         var revolute = new p2.RevoluteConstraint(this.body, wheel.body, {
             localPivotA: [0.5 * this.length, 0],
             localPivotB: [0, 0],
@@ -330,6 +331,7 @@ class Car {
         return this.chassis.get_center_body();
     }
 }
+
 
 // Daniel's new class for creating cars with convex chassis
 // I am leaving the regular car class for now.
