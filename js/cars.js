@@ -26,17 +26,22 @@ class Track {
         var last_x = 0;
         var last_y = 0;
 
-        var line = new Line(last_x, last_y, 1, 0);
+        var line = new Line(last_x, last_y, STOP_LINE_LENGTH, 0);
         lines.push(line);
+
+        [last_x, last_y] = line.get_endpoint();
+        line = new Line(last_x, last_y, START_PLATFORM_LENGTH, 0);
+        lines.push(line);
+
         for (var i = 0; i < numberOfLines; i++){
             [last_x, last_y] = line.get_endpoint();
 
             var angle = Math.random() * 2 * MAX_ANGLE_RAD - MAX_ANGLE_RAD;
-            line = new Line(last_x, last_y, 1, angle);
+            line = new Line(last_x, last_y, PLATFORM_LENGTH, angle);
             lines.push(line);
         }
         [last_x, last_y] = line.get_endpoint();
-        lines.push(new Line(last_x, last_y, 1, 0));
+        lines.push(new Line(last_x, last_y, STOP_LINE_LENGTH, 0));
 
         this.lines = lines;
     }
@@ -147,9 +152,6 @@ class CarChassisConvex {
     }
 
     attach_front_wheel(wheel) {
-        // make the front wheel heavier so that it can't be
-        // pushed up by high speed of the back wheel
-        wheel.body.mass = 5;
         var revolute = new p2.RevoluteConstraint(this.body, wheel.body, {
             worldPivot: [this.position[0] + this.vert[3][0], this.position[1] + this.vert[3][1]],
             collideConnected: false
@@ -352,7 +354,7 @@ class ConvexCar {
         this.world = world;
 
         // x=2 not to hit the first platform
-        var car_position = [3, 1.2];
+        var car_position = START_POSITION;
 
         // Create chassis for our car
         var chassis = new CarChassisConvex({

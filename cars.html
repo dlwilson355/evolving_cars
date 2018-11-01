@@ -20,7 +20,7 @@
     </div>
 
     <script>
-        prev_parents = initial_population(POP_SIZE)
+        prev_parents = initial_population(START_POP_SIZE);
         cars_options = prev_parents;
         var app = new p2.WebGLRenderer(function() {
             console.log('New game');
@@ -80,7 +80,7 @@
                 for (var i = 0; i < cars_info.length; i++) {
                     pos = cars_info[i]["car"].get_position()[0];
                     last_pos = cars_info[i]["last_pos"];
-                    if (Math.abs(pos - last_pos) < 0.01) {
+                    if (Math.abs(pos - last_pos) < CAR_STUCK_TOL) {
                         prepare_car_for_remove(i);
                     } else {
                         cars_info[i]["last_pos"] = pos;
@@ -137,7 +137,7 @@
             }
 
             // Remove stuck cars each 1 sec
-            setInterval(this.check_stuck_cars, 1000);
+            setInterval(this.check_stuck_cars, CAR_STUCK_CHECK_INTERVAL);
 
             // Event listeners
             world.on("beginContact", function (event) {
@@ -217,7 +217,7 @@
         // Set up number of iterations to skip
         skip_num_label = "Iterations to skip";
         app.settings[skip_num_label] = 1;
-        game_folder.add(app.settings, skip_num_label, 1, 100).step(1);
+        game_folder.add(app.settings, skip_num_label, 1, MAX_SKIP_NUM).step(1);
 
         skip_label = "Skip iterations";
         app.settings[skip_label] = function() {
