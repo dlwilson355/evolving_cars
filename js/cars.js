@@ -37,6 +37,9 @@ class Track {
             [last_x, last_y] = line.get_endpoint();
 
             var angle = Math.random() * 2 * MAX_ANGLE_RAD - MAX_ANGLE_RAD;
+            if (i == numberOfLines - 1) {
+                angle = 0;  // ensure the last peice of track is flat
+            }
             line = new Line(last_x, last_y, PLATFORM_LENGTH, angle);
             lines.push(line);
         }
@@ -135,7 +138,7 @@ class CarChassisConvex {
                 lengths[i] = 0.5;
             }
             // fix the exception that occurs if the angles are too close
-            if (Math.abs(angles[i] - prev_angle) < 0.3) {
+            if (Math.abs(angles[i] - prev_angle) < 0.4) {
                 angles = [0, .5*Math.PI, Math.PI, 1.5*Math.PI];
             }
             prev_angle = angles[i];
