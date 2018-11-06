@@ -41,8 +41,9 @@ function initial_population(pop_size) {
     var cars_options = [];
     var verticies_num = 4;
     var options, step_sizes;
-    [options, step_sizes] = get_initial_options(verticies_num);
+    
     for (var i = 0; i < pop_size; i++) {
+        [options, step_sizes] = get_initial_options(verticies_num);
         cars_options.push(create_child(options, step_sizes));
     }
 

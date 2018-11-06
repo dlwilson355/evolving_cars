@@ -70,13 +70,7 @@ class Track {
 class CarChassisConvex {
     constructor(options) {
         this.position = options["position"];
-        if ("verticies" in options) {
-            this.vert = options["verticies"];
-        }
-        else {
-            this.vert = this.get_random_verticies();
-        }
-        this.vert = this.get_sorted_verticies();
+        this.vert = this.get_verticies(options['angles'], options['lengths']);
         this.body = new p2.Body({
             mass: 1,
             position: this.position
@@ -100,10 +94,10 @@ class CarChassisConvex {
     }
 
     // we need to sort the verticies in counterclockwise order or else p2 throws an exception
-    get_sorted_verticies() {
+    get_sorted_verticies(verts) {
         var radians = [];
-        for (var i=0; i < this.vert.length; i++) {
-            var radian = Math.atan2(this.vert[i][1], this.vert[i][0]);
+        for (var i=0; i < verts.length; i++) {
+            var radian = Math.atan2(verts[i][1], verts[i][0]);
             if (radian < 0) {
                 radian += 2*Math.PI;
             }
@@ -111,12 +105,42 @@ class CarChassisConvex {
         }
         var sorted_verticies = [];
         // TODO: potential issue if two radians are equal
-        for (var i=0; i < this.vert.length; i++) {
+        for (var i=0; i < verts.length; i++) {
             var index = radians.indexOf(Math.min.apply(Math, radians));
-            sorted_verticies.push(this.vert[index]);
+            sorted_verticies.push(verts[index]);
             radians[index] = 10;
         }
         return sorted_verticies
+    }
+
+    get_verticies(angles, lengths) {
+        [angles, lengths] = this.fix_errors(angles, lengths);
+        var angles = angles.sort();
+        var verts = [];
+        for (var i=0; i<angles.length; i++) {
+            var x = lengths[i] * Math.cos(angles[i]);
+            var y = lengths[i] * Math.sin(angles[i]);
+            verts.push([x, y]);
+        }
+        return verts;
+    }
+
+    // a temporary functions to prevent exceptions thrown by the renderer if verticies are two close to the origion or if their angles aren't far enough apart
+    // we will need to find a better solution to this
+    fix_errors(angles, lengths) {
+        var prev_angle = angles[3];
+        for (var i=0; i<lengths.length; i++) {
+            // fix the exception that occurs if the length is too small
+            if (lengths[i] < 0.5) {
+                lengths[i] = 0.5;
+            }
+            // fix the exception that occurs if the angles are too close
+            if (Math.abs(angles[i] - prev_angle) < 0.3) {
+                angles = [0, .5*Math.PI, Math.PI, 1.5*Math.PI];
+            }
+            prev_angle = angles[i];
+        }
+        return [angles, lengths]
     }
 
     add_to_world(world) {
@@ -342,12 +366,23 @@ class ConvexCar {
         // bw - back wheel, fw - front wheel
         this.radius_bw = options["radius_bw"];
         this.radius_fw = options["radius_fw"];
-        this.length = options["length"];
         this.speed = 3;
+        [this.angles, this.lengths] = this.get_angles_and_lengths(options["options"])
         if ("speed" in options) {
             this.speed = options["speed"]
         }
         this.removed = false;
+    }
+
+    // returns the angles and verticies from the genome vector
+    get_angles_and_lengths(genome) {
+        var angles = [];
+        var verticies = [];
+        for (var i=0; i<genome.length-1; i+=2) {
+            angles.push(genome[i]);
+            verticies.push(genome[i+1]);
+        }
+        return [angles, verticies]
     }
 
     add_to_world(world) {
@@ -358,7 +393,9 @@ class ConvexCar {
 
         // Create chassis for our car
         var chassis = new CarChassisConvex({
-            position: car_position,
+            position: START_POSITION,
+            angles: this.angles,
+            lengths: this.lengths
         })
         chassis.add_to_world(world);
 
