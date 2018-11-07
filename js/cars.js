@@ -26,25 +26,19 @@ class Track {
         var last_x = 0;
         var last_y = 0;
 
-        var line = new Line(last_x, last_y, STOP_LINE_LENGTH, 0);
-        lines.push(line);
-
-        [last_x, last_y] = line.get_endpoint();
-        line = new Line(last_x, last_y, START_PLATFORM_LENGTH, 0);
+        var line = new Line(last_x, last_y, START_PLATFORM_LENGTH, -Math.PI / 12);
         lines.push(line);
 
         for (var i = 0; i < numberOfLines; i++){
             [last_x, last_y] = line.get_endpoint();
 
             var angle = Math.random() * 2 * MAX_ANGLE_RAD - MAX_ANGLE_RAD;
-            if (i == numberOfLines - 1) {
-                angle = 0;  // ensure the last peice of track is flat
-            }
             line = new Line(last_x, last_y, PLATFORM_LENGTH, angle);
             lines.push(line);
         }
+
         [last_x, last_y] = line.get_endpoint();
-        lines.push(new Line(last_x, last_y, STOP_LINE_LENGTH, 0));
+        lines.push(new Line(last_x, last_y, STOP_PLATFORM_LENGTH, 0));
 
         this.lines = lines;
     }
@@ -61,7 +55,7 @@ class Track {
             body.addShape(line);
             world.addBody(body);
 
-            if (i == 0 || i == this.lines.length - 1) {
+            if (i == this.lines.length - 1) {
                 this.edges.push(body);
             }
         }

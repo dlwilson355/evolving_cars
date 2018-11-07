@@ -26,6 +26,7 @@
 
             var game_start_time = Date.now();
             var skip_start_time = 0;
+            var place = 1;
 
             this.paused = false;
             var game_finished = false;
@@ -37,10 +38,10 @@
 
             // Create a World
             var world = new p2.World({
-                gravity: [0,-10] // Set gravity to -10 in y direction
+                gravity: [0, -10] // Set gravity to -10 in y direction
             });
             // Set high friction so the wheels don't slip
-            world.defaultContactMaterial.friction = 100;
+            world.defaultContactMaterial.friction = FRICTION;
             this.setWorld(world);
 
             // Create a Track
@@ -59,10 +60,13 @@
                 });
             }
 
-            function prepare_car_for_remove(car_ix) {
+            function prepare_car_for_remove(car_ix, finished=false) {
                 car = cars_info[car_ix]["car"];
                 cars_to_remove.push(car);
                 cars_options[cars_info[car_ix]["index"]]["position"] = car.get_position()[0];
+                if (finished) {
+                    cars_options[cars_info[car_ix]["index"]]["place"] = place++;
+                }
                 cars_info.splice(car_ix, 1);
             }
 
@@ -152,7 +156,7 @@
                         }
                     }
                     if (car_ix >= 0) {
-                        prepare_car_for_remove(car_ix);
+                        prepare_car_for_remove(car_ix, true);
                     }
                 }
             });
