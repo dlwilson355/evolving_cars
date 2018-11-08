@@ -51,7 +51,7 @@
             // Create cars
             var cars_info = [];
             for (var i = 0; i < cars_options.length; i++) {
-                var car = new ConvexCar(cars_options[i]);
+                var car = new Car(cars_options[i]);
                 car.add_to_world(world);
                 cars_info.push({
                     "car": car,
