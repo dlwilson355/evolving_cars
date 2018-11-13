@@ -1,5 +1,5 @@
 // TRACK SETTINGS
-TRACK_LENGTH = 100;
+TRACK_LENGTH = 10;
 TRACK_MAX_ANGLE_DEG = 45;
 PLATFORM_LENGTH = 1.5;
 START_PLATFORM_LENGTH = 4;
@@ -20,7 +20,4 @@ START_POP_SIZE = 20;
 MU = START_POP_SIZE;
 LAMBDA = Math.floor(MU / 2);
 
-BOUNDS = [[0, 2 * Math.pi], [0, 2],
-          [0, 2 * Math.pi], [0, 2],
-          [0, 2 * Math.pi], [0, 2],
-          [0, 2 * Math.pi], [0, 2]]
+LENGTH_BOUNDS = [0.5, 2];

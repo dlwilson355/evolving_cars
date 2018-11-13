@@ -146,6 +146,7 @@
             world.on("beginContact", function (event) {
                 // We cannot remove the body here since the world is still stepping.
                 // Instead, schedule the body to be removed after the step is done.
+
                 if (track.edges.includes(event.bodyA) || track.edges.includes(event.bodyB)) {
                     var car_ix = -1;
                     for (var j = 0; j < cars_info.length; j++) {

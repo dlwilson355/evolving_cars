@@ -106,17 +106,17 @@ class CarChassis {
     }
 
     get_back_wheel_position() {
-        var verticy = this.get_verticy(2, this.angles, this.lengths);
+        var verticy = this.get_verticy(1, this.angles, this.lengths);
         return [this.position[0] + verticy[0], this.position[1] + verticy[1]]
     }
 
     get_front_wheel_position() {
-        var verticy = this.get_verticy(3, this.angles, this.lengths);
+        var verticy = this.get_verticy(2, this.angles, this.lengths);
         return [this.position[0] + verticy[0], this.position[1] + verticy[1]]
     }
 
     attach_back_wheel(wheel) {
-        var verticy = this.get_verticy(2, this.angles, this.lengths);
+        var verticy = this.get_verticy(1, this.angles, this.lengths);
         var revolute = new p2.RevoluteConstraint(this.body, wheel.body, {
             worldPivot: [this.position[0] + verticy[0], this.position[1] + verticy[1]],
             collideConnected: false
@@ -131,7 +131,7 @@ class CarChassis {
     }
 
     attach_front_wheel(wheel) {
-        var verticy = this.get_verticy(3, this.angles, this.lengths);
+        var verticy = this.get_verticy(2, this.angles, this.lengths);
         var revolute = new p2.RevoluteConstraint(this.body, wheel.body, {
             worldPivot: [this.position[0] + verticy[0], this.position[1] + verticy[1]],
             collideConnected: false

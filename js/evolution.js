@@ -39,11 +39,13 @@ function create_child(options, step_sizes) {
 
 function initial_population(pop_size) {
     var cars_options = [];
-    var verticies_num = 4;
+    var verticies_min = 3;
+    var verticies_max = 8;
     var options, step_sizes;
 
     for (var i = 0; i < pop_size; i++) {
-        [options, step_sizes] = get_initial_options(verticies_num);
+        num_verticies = Math.floor(Math.random() * (verticies_max - verticies_min)) + verticies_min;
+        [options, step_sizes] = get_initial_options(num_verticies);
         cars_options.push(create_child(options, step_sizes));
     }
 
@@ -72,23 +74,31 @@ function random_gaussian(mean=0.0, stdev=1.0) {
 }
 
 
-function mutate(parent, step_sizes, bounds) {
+function mutate(parent, step_sizes, length_bounds) {
     var child = [];
     var child_step_sizes = []
 
     var tau = Math.pow(Math.sqrt(2.0 * step_sizes.length), -1.0);
     var tau_p = Math.pow(Math.sqrt(2.0 * Math.sqrt(step_sizes.length)), -1.0);
 
-    for (var i = 0; i < parent.length; i++) {
+    for (var i = 0; i < parent.length-1; i+=2) {
+        // mutate the angle
         child[i] = parent[i] + step_sizes[i] * random_gaussian();
-        if (child[i] < bounds[i][0]) {
-            child[i] = bounds[i][0];
+        if (child[i] > (Math.PI * 2)) {
+            child[i] = child[i] - (Math.PI * 2)
         }
-        if (child[i] > bounds[i][1]) {
-            child[i] = bounds[i][1];
+        //mutate the length
+        child[i+1] = parent[i+1] + step_sizes[i+1] * random_gaussian();
+        // make sure lengths lie within bounds
+        if (child[i+1][0] < length_bounds[0]) {
+            child[i+1][0] = length_bounds[0];
         }
-
+        if (child[i+1] > length_bounds[1]) {
+            child[i+1] = length_bounds[1];
+        }
+        // mutate the step sizes
         child_step_sizes[i] = step_sizes[i] * Math.exp(tau_p * random_gaussian() + tau * random_gaussian());
+        child_step_sizes[i+1] = step_sizes[i+1] * Math.exp(tau_p * random_gaussian() + tau * random_gaussian());
     }
 
     return [child, child_step_sizes];
@@ -115,7 +125,7 @@ function do_evolution(population) {
 
         var parent = prev_parents[random_ix];
 
-        [options, step_sizes] = mutate(parent.options, parent.step_sizes, BOUNDS);
+        [options, step_sizes] = mutate(parent.options, parent.step_sizes, LENGTH_BOUNDS);
         children.push(create_child(options, step_sizes));
     }
 
