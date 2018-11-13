@@ -104,15 +104,32 @@ function mutate(parent, step_sizes, length_bounds) {
     return [child, child_step_sizes];
 }
 
+function get_cars_sorted_by_rank(population) {
+    // first separate the placed and unplaced cars
+    placed_cars = [];
+    unplaced_cars = [];
+    for (i=0; i<population.length; i++) {
+        if ('place' in population[i]) {
+            placed_cars.push(population[i]);
+        }
+        else {
+            unplaced_cars.push(population[i])
+        }
+    }
+    // sort the placed cars based on the position they placed in
+    placed_cars.sort(function(a, b) {return a['place'] - b['place']})
+    // sort the non-placed cars based on the distance they traveled
+    unplaced_cars.sort(function(a, b) {return b['position'] - a['position']})
+    sorted_cars = placed_cars.concat(unplaced_cars);
+    return sorted_cars;
+}
 
 function do_evolution(population) {
     // population is defined by cars options (see constructor)
     var all_sorted_population = population.concat(prev_parents);
-    all_sorted_population.sort(function(a, b) {
-        return fitness(a) - fitness(b);
-    });
+    all_sorted_population = get_cars_sorted_by_rank(all_sorted_population);
 
-    prev_parents = all_sorted_population.slice(-MU);
+    prev_parents = all_sorted_population.slice(0, MU);
 
     var children = []
     var selected_parents = [];
@@ -134,11 +151,6 @@ function do_evolution(population) {
         mean += fitness(prev_parents[i]);
     }
     mean /= prev_parents.length;
-    console.log(mean);
-
-    for (var i = 0; i < population.length; i++) {
-        console.log(fitness(population[i]));
-    }
 
     return children;
 }
