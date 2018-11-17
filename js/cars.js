@@ -1,4 +1,5 @@
 MAX_ANGLE_RAD = TRACK_MAX_ANGLE_DEG * Math.PI / 180;
+MAX_TRACK_HEIGHT = TRACK_LENGTH * PLATFORM_LENGTH * Math.sin(MAX_ANGLE_RAD)
 
 var WHEEL = Math.pow(2,0), // 00000000000000000000000000000001 in binary
     CHASSIS =  Math.pow(2,1), // 00000000000000000000000000000010 in binary
@@ -116,9 +117,8 @@ class CarChassis {
     }
 
     attach_back_wheel(wheel) {
-        var verticy = this.get_verticy(1, this.angles, this.lengths);
         var revolute = new p2.RevoluteConstraint(this.body, wheel.body, {
-            worldPivot: [this.position[0] + verticy[0], this.position[1] + verticy[1]],
+            worldPivot: this.get_back_wheel_position(),
             collideConnected: false
         });
         revolute.enableMotor();
@@ -131,9 +131,8 @@ class CarChassis {
     }
 
     attach_front_wheel(wheel) {
-        var verticy = this.get_verticy(2, this.angles, this.lengths);
         var revolute = new p2.RevoluteConstraint(this.body, wheel.body, {
-            worldPivot: [this.position[0] + verticy[0], this.position[1] + verticy[1]],
+            worldPivot: this.get_front_wheel_position(),
             collideConnected: false
         });
         this.world.addConstraint(revolute);
@@ -174,11 +173,10 @@ class Car {
         this.radius_bw = options["radius_bw"];
         this.radius_fw = options["radius_fw"];
         this.speed = 3;
-        [this.angles, this.lengths] = this.get_angles_and_lengths(options["options"])
+        [this.angles, this.lengths] = this.get_angles_and_lengths(options["angles_lengths"])
         if ("speed" in options) {
             this.speed = options["speed"]
         }
-        this.removed = false;
     }
 
     // returns the angles and verticies from the genome vector
@@ -236,8 +234,6 @@ class Car {
         this.world.removeBody(this.chassis.body);
         this.world.removeBody(this.back_wheel.body);
         this.world.removeBody(this.front_wheel.body);
-
-        this.removed = true;
     }
 
     has_body(body) {

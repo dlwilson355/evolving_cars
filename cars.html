@@ -20,8 +20,7 @@
     </div>
 
     <script>
-        prev_parents = initial_population(START_POP_SIZE);
-        cars_options = prev_parents;
+        cars_options = initial_population(START_POP_SIZE);
         var app = new p2.WebGLRenderer(function() {
 
             var game_start_time = Date.now();
@@ -81,12 +80,13 @@
                 if (app.paused) return;
 
                 for (var i = 0; i < cars_info.length; i++) {
-                    pos = cars_info[i]["car"].get_position()[0];
+                    [x_pos, y_pos] = cars_info[i]["car"].get_position();
                     last_pos = cars_info[i]["last_pos"];
-                    if (Math.abs(pos - last_pos) < CAR_STUCK_TOL) {
+                    if (Math.abs(x_pos - last_pos) < CAR_STUCK_TOL
+                        || Math.abs(y_pos) > MAX_TRACK_HEIGHT) {
                         prepare_car_for_remove(i);
                     } else {
-                        cars_info[i]["last_pos"] = pos;
+                        cars_info[i]["last_pos"] = x_pos;
                     }
                 }
             }
