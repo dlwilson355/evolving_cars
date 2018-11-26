@@ -87,7 +87,7 @@ function random_gaussian(mean=0.0, stdev=1.0) {
 }
 
 
-function mutate(parent_optns, length_bounds) {
+function mutate(parent_optns) {
     var child_optns = get_initial_options();
 
     var tau, tau_p;
@@ -112,11 +112,11 @@ function mutate(parent_optns, length_bounds) {
 
         // mutate the length
         var ch_length = angles_lengths[i + 1] + step_sizes[i + 1] * random_gaussian();
-        if (ch_length < length_bounds[0]) {
-            ch_length = length_bounds[0];
+        if (ch_length < LENGTH_BOUNDS[0]) {
+            ch_length = LENGTH_BOUNDS[0];
         }
-        if (ch_length > length_bounds[1]) {
-            ch_length = length_bounds[1];
+        if (ch_length > LENGTH_BOUNDS[1]) {
+            ch_length = LENGTH_BOUNDS[1];
         }
         child_optns['angles_lengths']['data'][i + 1] = ch_length;
 
@@ -185,7 +185,7 @@ function do_evolution(population) {
         var parent = prev_parents[random_ix];
         children.push(
             create_child(
-                mutate(parent.options, LENGTH_BOUNDS)
+                mutate(parent.options)
             )
         );
     }
