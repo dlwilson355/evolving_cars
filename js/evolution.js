@@ -19,8 +19,8 @@ function get_initial_options(N, max_length=1, max_angle_step_frac=16, max_length
 
     // angles and lengths
     for(var i = 0; i < N; i++){
-        options['angles_lengths']['data'].push(2 * Math.random() * Math.PI); // angle
-        options['angles_lengths']['data'].push(Math.random() * max_length); // length
+        options['angles_lengths']['data'].push(Math.random() * (ANGLE_BOUNDS[1] - ANGLE_BOUNDS[0]) + ANGLE_BOUNDS[0]); // angle
+        options['angles_lengths']['data'].push(Math.random() * (LENGTH_BOUNDS[1] - LENGTH_BOUNDS[0]) + LENGTH_BOUNDS[0]); // length
 
         options['angles_lengths']['step_sizes'].push(Math.random() * Math.PI / max_angle_step_frac);
         options['angles_lengths']['step_sizes'].push(Math.random() * max_length / max_length_step_frac)
@@ -52,11 +52,9 @@ function create_child(options) {
 
 function initial_population(pop_size) {
     var cars_options = [];
-    var verticies_min = 3;
-    var verticies_max = 8;
 
     for (var i = 0; i < pop_size; i++) {
-        num_verticies = Math.floor(Math.random() * (verticies_max - verticies_min)) + verticies_min;
+        num_verticies = Math.floor(Math.random() * (VERTICY_BOUNDS[1] - VERTICY_BOUNDS[0])) + VERTICY_BOUNDS[0];
         cars_options.push(
             create_child(
                 get_initial_options(num_verticies)
@@ -103,7 +101,13 @@ function mutate(parent_optns, length_bounds) {
     for (var i = 0; i < angles_lengths.length; i += 2) {
         // mutate the angle
         var ch_angle = angles_lengths[i] + step_sizes[i] * random_gaussian();
-        ch_angle = (ch_angle + 2 * Math.PI) % (2 * Math.PI); // only from 0 to 360
+        // make sure the angle lies within the bounds
+        if (ch_angle < ANGLE_BOUNDS[0]) {
+            ch_angle = ANGLE_BOUNDS[0];
+        }
+        if (ch_angle > ANGLE_BOUNDS[1]) {
+            ch_angle = ANGLE_BOUNDS[1];
+        }
         child_optns['angles_lengths']['data'][i] = ch_angle;
 
         // mutate the length
