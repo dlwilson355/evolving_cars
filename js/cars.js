@@ -80,19 +80,39 @@ class CarChassis {
         }
     }
 
+    get_normalized_turning_amounts(angles) {
+        var turning_amounts = [];
+        var total_turn = 0;
+        for (var i=0; i<angles.length; i++) {
+            var turning_amount = Math.PI - angles[i];
+            turning_amounts.push(turning_amount);
+            total_turn += turning_amount;
+        }
+        var normalization_ratio = Math.PI * 2 / total_turn;
+        for (var i=0; i<turning_amounts.length; i++) {
+            turning_amounts[i] = turning_amounts[i] * normalization_ratio;
+        }
+        return turning_amounts
+    }
+
     get_verticies(angles, lengths) {
-        var sorted_angles = angles.sort();
+        var turning_amounts = this.get_normalized_turning_amounts(angles);
         var vs = [];
-        for (var i=0; i<sorted_angles.length; i++) {
-            var x = lengths[i] * Math.cos(sorted_angles[i]);
-            var y = lengths[i] * Math.sin(sorted_angles[i]);
-            vs.push([x, y]);
+        var last_x = 0;
+        var last_y = 0;
+        var last_turning_amount = 0;
+        for (var i=0; i<turning_amounts.length; i++) {
+            last_turning_amount += turning_amounts[i];
+            last_x = last_x + lengths[i] * Math.cos(last_turning_amount) / 2;
+            last_y = last_y + lengths[i] * Math.sin(last_turning_amount) / 2;
+            vs.push([last_x, last_y]);
         }
         return vs;
     }
 
     get_verticy(verticy_number, angles, lengths) {
-        return [lengths[verticy_number] * Math.cos(angles[verticy_number]), lengths[verticy_number] * Math.sin(angles[verticy_number])]
+        var verticies = this.get_verticies(angles, lengths);
+        return verticies[verticy_number]
     }
 
     add_to_world(world) {

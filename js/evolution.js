@@ -2,8 +2,8 @@ function get_initial_options(N, max_length=1, max_angle_step_frac=16, max_length
     var angles_lengths = [];
     var step_sizes = []
     for(var i = 0; i < N; i++){
-        angles_lengths.push(2 * Math.random() * Math.PI); // angle
-        angles_lengths.push(Math.random() * max_length); // length
+        angles_lengths.push(Math.random() * (ANGLE_BOUNDS[1] - ANGLE_BOUNDS[0]) + ANGLE_BOUNDS[0]); // angle
+        angles_lengths.push(Math.random() * (LENGTH_BOUNDS[1] - LENGTH_BOUNDS[0]) + LENGTH_BOUNDS[0]); // length
 
         step_sizes.push(Math.random() * Math.PI / max_angle_step_frac);
         step_sizes.push(Math.random() * max_length / max_length_step_frac)
@@ -39,12 +39,10 @@ function create_child(options, step_sizes) {
 
 function initial_population(pop_size) {
     var cars_options = [];
-    var verticies_min = 3;
-    var verticies_max = 8;
     var options, step_sizes;
 
     for (var i = 0; i < pop_size; i++) {
-        num_verticies = Math.floor(Math.random() * (verticies_max - verticies_min)) + verticies_min;
+        num_verticies = Math.floor(Math.random() * (VERTICY_BOUNDS[1] - VERTICY_BOUNDS[0])) + VERTICY_BOUNDS[0];
         [options, step_sizes] = get_initial_options(num_verticies);
         cars_options.push(create_child(options, step_sizes));
     }
@@ -84,14 +82,18 @@ function mutate(parent, step_sizes, length_bounds) {
     for (var i = 0; i < parent.length-1; i+=2) {
         // mutate the angle
         child[i] = parent[i] + step_sizes[i] * random_gaussian();
-        if (child[i] > (Math.PI * 2)) {
-            child[i] = child[i] - (Math.PI * 2)
+        // make sure the angle lies within the bounds
+        if (child[i] < ANGLE_BOUNDS[0]) {
+            child[i] = ANGLE_BOUNDS[0];
+        }
+        if (child[i] > ANGLE_BOUNDS[1]) {
+            child[i] = ANGLE_BOUNDS[1];
         }
         //mutate the length
         child[i+1] = parent[i+1] + step_sizes[i+1] * random_gaussian();
         // make sure lengths lie within bounds
-        if (child[i+1][0] < length_bounds[0]) {
-            child[i+1][0] = length_bounds[0];
+        if (child[i+1] < length_bounds[0]) {
+            child[i+1] = length_bounds[0];
         }
         if (child[i+1] > length_bounds[1]) {
             child[i+1] = length_bounds[1];
