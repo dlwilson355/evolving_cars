@@ -79,8 +79,13 @@ class CarChassis {
             this.body.shapes[i].collisionGroup = CHASSIS;
             this.body.shapes[i].collisionMask = TRACK;
         }
+        this.body.mass = this.get_mass(this.body);
+        
+        console.log("mass");
+        console.log(this.body.mass);
     }
 
+    // returns an array representing how much each internal angle in the shape of the chassis
     get_normalized_turning_amounts(angles) {
         var turning_amounts = [];
         var total_turn = 0;
@@ -96,6 +101,7 @@ class CarChassis {
         return turning_amounts
     }
 
+    // returns the location of the verticies in the chassis
     get_verticies(angles, lengths) {
         var turning_amounts = this.get_normalized_turning_amounts(angles);
         var vs = [];
@@ -109,6 +115,15 @@ class CarChassis {
             vs.push([last_x, last_y]);
         }
         return vs;
+    }
+
+    get_mass(body) {
+        var area = 0;
+        for (var i=0; i<body.shapes.length; i++) {
+            area += body.shapes[i].area;
+        }
+        var mass = CHASSIS_DENSITY * area
+        return mass
     }
 
     get_verticy(verticy_number, angles, lengths) {

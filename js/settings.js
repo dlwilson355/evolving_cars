@@ -9,6 +9,7 @@ STOP_PLATFORM_LENGTH = PLATFORM_LENGTH;
 WHEEL_SPEED = 15;
 START_POSITION = [1.7, 0.7];
 VERTICY_BOUNDS = [3, 6];
+CHASSIS_DENSITY = 1;
 
 // GAME WORLD SETTINGS
 CAR_STUCK_TOL = 0.1;  // difference of the last and current positions
