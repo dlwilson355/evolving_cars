@@ -80,38 +80,38 @@ class CarChassis {
             this.body.shapes[i].collisionMask = TRACK;
         }
         this.body.mass = this.get_mass(this.body);
-        
-        console.log("mass");
-        console.log(this.body.mass);
+        if (this.body.mass < 0.05) {
+            console.log("angles", this.angles);
+            console.log("lengths", this.lengths);
+            console.log("mass");
+            console.log(this.body.mass);
+        } 
     }
 
     // returns an array representing how much each internal angle in the shape of the chassis
-    get_normalized_turning_amounts(angles) {
-        var turning_amounts = [];
-        var total_turn = 0;
+    get_normalized_angles(angles) {
+        var sum_angles = 0
+        var normalized_angles = []
         for (var i=0; i<angles.length; i++) {
-            var turning_amount = Math.PI - angles[i];
-            turning_amounts.push(turning_amount);
-            total_turn += turning_amount;
+            sum_angles += angles[i];
         }
-        var normalization_ratio = Math.PI * 2 / total_turn;
-        for (var i=0; i<turning_amounts.length; i++) {
-            turning_amounts[i] = turning_amounts[i] * normalization_ratio;
+        for (var i=0; i<angles.length; i++) {
+            normalized_angles.push(angles[i] / sum_angles * (2 * Math.PI))
         }
-        return turning_amounts
+        return normalized_angles;
     }
 
     // returns the location of the verticies in the chassis
     get_verticies(angles, lengths) {
-        var turning_amounts = this.get_normalized_turning_amounts(angles);
+        var normalized_angles = this.get_normalized_angles(angles);
         var vs = [];
         var last_x = 0;
         var last_y = 0;
-        var last_turning_amount = 0;
-        for (var i=0; i<turning_amounts.length; i++) {
-            last_turning_amount += turning_amounts[i];
-            last_x = last_x + lengths[i] * Math.cos(last_turning_amount) / 2;
-            last_y = last_y + lengths[i] * Math.sin(last_turning_amount) / 2;
+        var total_angle = 0;
+        for (var i=0; i<normalized_angles.length; i++) {
+            total_angle += normalized_angles[i];
+            last_x = lengths[i] * Math.cos(total_angle);
+            last_y = lengths[i] * Math.sin(total_angle);
             vs.push([last_x, last_y]);
         }
         return vs;
