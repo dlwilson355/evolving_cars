@@ -80,12 +80,6 @@ class CarChassis {
             this.body.shapes[i].collisionMask = TRACK;
         }
         this.body.mass = this.get_mass(this.body);
-        if (this.body.mass < 0.05) {
-            console.log("angles", this.angles);
-            console.log("lengths", this.lengths);
-            console.log("mass");
-            console.log(this.body.mass);
-        } 
     }
 
     // returns an array representing how much each internal angle in the shape of the chassis
