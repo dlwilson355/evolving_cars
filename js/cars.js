@@ -1,4 +1,5 @@
 MAX_ANGLE_RAD = TRACK_MAX_ANGLE_DEG * Math.PI / 180;
+MAX_ANGLE_CHANGE_RAD = TRACK_MAX_ANGLE_CHANGE_DEG * Math.PI / 180;
 MAX_TRACK_HEIGHT = TRACK_LENGTH * PLATFORM_LENGTH * Math.sin(MAX_ANGLE_RAD)
 
 var WHEEL = Math.pow(2,0), // 00000000000000000000000000000001 in binary
@@ -26,6 +27,7 @@ class Track {
         var lines = [];
         var last_x = 0;
         var last_y = 0;
+        var prev_angle = 0;
 
         var line = new Line(last_x, last_y, START_PLATFORM_LENGTH, -Math.PI / 12);
         lines.push(line);
@@ -33,7 +35,10 @@ class Track {
         for (var i = 0; i < numberOfLines; i++){
             [last_x, last_y] = line.get_endpoint();
 
-            var angle = Math.random() * 2 * MAX_ANGLE_RAD - MAX_ANGLE_RAD;
+            do {
+                var angle = Math.random() * 2 * MAX_ANGLE_RAD - MAX_ANGLE_RAD;
+            } while (Math.abs(prev_angle - angle) > MAX_ANGLE_CHANGE_RAD);
+            prev_angle = angle;
             line = new Line(last_x, last_y, PLATFORM_LENGTH, angle);
             lines.push(line);
         }
@@ -69,6 +74,8 @@ class CarChassis {
         this.position = options["position"];
         this.angles = options['angles'];
         this.lengths = options['lengths'];
+        this.front_wheel_angle = 7/4 * Math.PI;
+        this.back_wheel_angle = 5/4 * Math.PI;
         this.vert = this.get_verticies(this.angles, this.lengths);
         this.body = new p2.Body({
             mass: 1,
@@ -111,6 +118,20 @@ class CarChassis {
         return vs;
     }
 
+    // returns the total of the chassis' verticies
+    // this.angles stores the amount each angles turns relative to the previous angle
+    // this functions returns the actual angle each verticy is drawn at
+    get_total_angles(angles) {
+        angles = this.get_normalized_angles(angles);
+        var total_angle = 0;
+        var total_angles = [];
+        for (var i=0; i < angles.length; i++) {
+            total_angle += angles[i];
+            total_angles.push(total_angle);
+        }
+        return (total_angles)
+    }
+
     get_mass(body) {
         var area = 0;
         for (var i=0; i<body.shapes.length; i++) {
@@ -130,18 +151,45 @@ class CarChassis {
         this.world = world;
     }
 
-        // To fix the camera
+    // To fix the camera
     get_center_body() {
         return this.body;
     }
 
+    // Returns the index of the verticy nearest to the target angle (in radians)
+    get_nearest_verticy_index(target_angle) {
+        var differences_from_target_angle = [];
+        var total_angles = this.get_total_angles(this.angles);
+        // calculate the difference between each angle and target angle
+        for (var i=0; i < total_angles.length; i++) {
+            differences_from_target_angle.push(Math.abs(total_angles[i] - target_angle));
+        }
+        // find the angle with the lowest difference
+        var index = 0;
+        var min_difference = 100;
+        for (var i=0; i < differences_from_target_angle.length; i++) {
+            if (differences_from_target_angle[i] < min_difference) {
+                min_difference = differences_from_target_angle[i];
+                index = i;
+            }
+        }
+        return index
+    }
+
     get_back_wheel_position() {
-        var verticy = this.get_verticy(1, this.angles, this.lengths);
+        var back_wheel_index = this.get_nearest_verticy_index(this.back_wheel_angle);
+        var front_wheel_index = this.get_nearest_verticy_index(this.front_wheel_angle);
+        // make sure both wheels aren't placed at the same verticy
+        if (back_wheel_index == front_wheel_index) {
+            back_wheel_index -= 1;
+        }
+        var verticy = this.get_verticies(this.angles, this.lengths)[back_wheel_index];
         return [this.position[0] + verticy[0], this.position[1] + verticy[1]]
     }
 
     get_front_wheel_position() {
-        var verticy = this.get_verticy(2, this.angles, this.lengths);
+        var front_wheel_index = this.get_nearest_verticy_index(this.front_wheel_angle);
+        var verticy = this.get_verticies(this.angles, this.lengths)[front_wheel_index];
         return [this.position[0] + verticy[0], this.position[1] + verticy[1]]
     }
 
