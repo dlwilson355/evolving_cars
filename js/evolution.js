@@ -167,6 +167,25 @@ function get_cars_sorted_by_rank(population) {
     return sorted_cars;
 }
 
+function get_parents(possible_parents) {
+    var selected_parents = [];
+    for (var i = 0; i < LAMBDA; i++) {
+        do {
+            var random_ix = Math.floor(Math.random() * MU);
+        } while (selected_parents.includes(random_ix))
+        selected_parents.push(possible_parents[random_ix]);
+    }
+    return selected_parents;
+}
+
+function get_children(parents) {
+    var children = []
+    for (i=0; i < parents.length; i++) {
+        children.push(create_child(mutate(parents[i].options)));
+    }
+    return children;
+}
+
 function do_evolution(population) {
     // population is defined by cars options (see constructor)
     var all_sorted_population = population.concat(prev_parents);
@@ -174,21 +193,8 @@ function do_evolution(population) {
 
     prev_parents = all_sorted_population.slice(0, MU);
 
-    var children = []
-    var selected_parents = [];
-    for (var i = 0; i < LAMBDA; i++) {
-        do {
-            var random_ix = Math.floor(Math.random() * MU);
-        } while (selected_parents.includes(random_ix))
-        selected_parents.push(random_ix);
-
-        var parent = prev_parents[random_ix];
-        children.push(
-            create_child(
-                mutate(parent.options)
-            )
-        );
-    }
+    parents = get_parents(prev_parents);
+    children = get_children(parents);
 
     var mean = 0;
     for (var i = 0; i < prev_parents.length; i++) {

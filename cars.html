@@ -21,6 +21,7 @@
 
     <script>
         cars_options = initial_population(START_POP_SIZE);
+        var hist = {'average_distance': [], 'proportion_completed': []}; // a dictionary containing arrays with data useful for generating charts
         var app = new p2.WebGLRenderer(function() {
 
             var game_start_time = Date.now();
@@ -116,6 +117,23 @@
                 this.paused = true;
                 console.log('Game over');
                 console.log('Game duration (msec.):', Date.now() - game_start_time);
+                // update the history
+                var distances = [];
+                var placed = [];
+                for (i=0; i<cars_options.length; i++) {
+                    distances.push(cars_options[i]['position']);
+                    if ('place' in cars_options[i]) {
+                        placed.push(1);
+                    }
+                    else {
+                        placed.push(0);
+                    }
+                }
+                hist['average_distance'].push(distances.reduce(function getSum(total, num) {return total + num;})/distances.length);
+                hist['proportion_completed'].push(placed.reduce(function getSum(total, num) {return total + num;})/placed.length);
+                console.log("hist");
+                console.log(hist['average_distance']);
+                console.log(hist['proportion_completed']);
                 if (skip_start_time > 0) {
                     console.log('Skip duration (msec.):', Date.now() - skip_start_time);
                 }
