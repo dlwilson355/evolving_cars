@@ -21,18 +21,22 @@
 
     <script>
         cars_options = initial_population(START_POP_SIZE);
-        var hist = {'average_distance': [], 'proportion_completed': []}; // a dictionary containing arrays with data useful for generating charts
+        // a dictionary containing arrays with data useful for generating charts
+        var hist = {'track_length': [], 'average_distance': [], 'proportion_completed': []}; 
         var app = new p2.WebGLRenderer(function() {
-
-            if (hist['average_distance'].length == 100) {
+            console.log("Generation");
+            console.log(hist['average_distance'].length);
+            if (hist['average_distance'].length == GENERATIONS_TO_SAVE_CSV) {
                 let csvContent = "data:text/csv;charset=utf-8,";
-                hist['average_distance'].forEach(function(item){
-                   csvContent += item + ",";
-                }); 
+                csvContent += "generation,track_length,average_distance,proportion_completed\n"
+                for (i=0; i<hist['average_distance'].length; i++) {
+                    console.log(csvContent);
+                    csvContent += i + "," + hist['track_length'][i] + "," + hist['average_distance'][i] + "," + hist['proportion_completed'][i] + "\n";
+                }
                 var encodedUri = encodeURI(csvContent);
                 var link = document.createElement("a");
                 link.setAttribute("href", encodedUri);
-                link.setAttribute("download", "my_data.csv");
+                link.setAttribute("download", "output.csv");
                 document.body.appendChild(link); // Required for FF
 
                 link.click(); // This will download the data file named "my_data.csv".
@@ -143,11 +147,9 @@
                         placed.push(0);
                     }
                 }
+                hist['track_length'].push(track.length);
                 hist['average_distance'].push(distances.reduce(function getSum(total, num) {return total + num;})/distances.length);
                 hist['proportion_completed'].push(placed.reduce(function getSum(total, num) {return total + num;})/placed.length);
-                console.log("hist");
-                console.log(hist['average_distance']);
-                console.log(hist['proportion_completed']);
                 if (skip_start_time > 0) {
                     console.log('Skip duration (msec.):', Date.now() - skip_start_time);
                 }

@@ -47,6 +47,7 @@ class Track {
         lines.push(new Line(last_x, last_y, STOP_PLATFORM_LENGTH, 0));
 
         this.lines = lines;
+        this.length = last_x;
     }
 
     add_to_world(world) {

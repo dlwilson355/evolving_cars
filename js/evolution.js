@@ -62,7 +62,7 @@ function initial_population(pop_size) {
         );
     }
 
-    prev_parents = cars_options;
+    prev_parents = [];
     return cars_options;
 }
 
@@ -89,13 +89,11 @@ function random_gaussian(mean=0.0, stdev=1.0) {
 
 function mutate(parent_optns) {
     var child_optns = get_initial_options();
-    console.log("before after");
 
     var tau, tau_p;
 
     // angles and lengths
     angles_lengths = parent_optns['angles_lengths']['data'];
-    console.log(angles_lengths);
     step_sizes = parent_optns['angles_lengths']['step_sizes'];
     tau = Math.pow(Math.sqrt(2.0 * step_sizes.length), -1.0);
     tau_p = Math.pow(Math.sqrt(2.0 * Math.sqrt(step_sizes.length)), -1.0);
@@ -144,7 +142,6 @@ function mutate(parent_optns) {
         var ch_ss_pos = step_sizes[i] * Math.exp(tau_p * random_gaussian() + tau * random_gaussian());
         child_optns['wheel_pos']['step_sizes'][i] = ch_ss_pos;
     }
-    console.log(child_optns['angles_lengths']['data']);
 
     return child_optns;
 }
@@ -168,14 +165,14 @@ function get_cars_sorted_by_rank(population) {
     unplaced_cars.sort(function(a, b) {return b['position'] - a['position']})
     sorted_cars = placed_cars.concat(unplaced_cars);
 
-    //test
-    stochastically_sorted_cars = [];
-    for (i=0; sorted_cars.length; i++) {
-        index = Math.floor(Math.pow(Math.random(), 1.5) * sorted_cars.length);
-        stochastically_sorted_cars.push(sorted_cars[index])
-        sorted_cars.splice(index, 1);
-    }
-    return stochastically_sorted_cars;
+    // //test
+    // stochastically_sorted_cars = [];
+    // for (i=0; sorted_cars.length; i++) {
+    //     index = Math.floor(Math.pow(Math.random(), 1.5) * sorted_cars.length);
+    //     stochastically_sorted_cars.push(sorted_cars[index])
+    //     sorted_cars.splice(index, 1);
+    // }
+    return sorted_cars;
 }
 
 function do_evolution(population) {
