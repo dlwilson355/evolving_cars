@@ -14,7 +14,7 @@ function get_empty_options() {
 }
 
 
-function get_initial_options(N, max_length=1, max_angle_step_frac=16, max_length_step_frac=10, max_wheel_step_frac=10) {
+function get_initial_options(N, max_length=1, max_angle_step_frac=8, max_length_step_frac=5, max_wheel_step_frac=5) {
     var options = get_empty_options();
 
     // angles and lengths
@@ -89,11 +89,13 @@ function random_gaussian(mean=0.0, stdev=1.0) {
 
 function mutate(parent_optns) {
     var child_optns = get_initial_options();
+    console.log("before after");
 
     var tau, tau_p;
 
     // angles and lengths
     angles_lengths = parent_optns['angles_lengths']['data'];
+    console.log(angles_lengths);
     step_sizes = parent_optns['angles_lengths']['step_sizes'];
     tau = Math.pow(Math.sqrt(2.0 * step_sizes.length), -1.0);
     tau_p = Math.pow(Math.sqrt(2.0 * Math.sqrt(step_sizes.length)), -1.0);
@@ -142,6 +144,7 @@ function mutate(parent_optns) {
         var ch_ss_pos = step_sizes[i] * Math.exp(tau_p * random_gaussian() + tau * random_gaussian());
         child_optns['wheel_pos']['step_sizes'][i] = ch_ss_pos;
     }
+    console.log(child_optns['angles_lengths']['data']);
 
     return child_optns;
 }
@@ -164,26 +167,15 @@ function get_cars_sorted_by_rank(population) {
     // sort the non-placed cars based on the distance they traveled
     unplaced_cars.sort(function(a, b) {return b['position'] - a['position']})
     sorted_cars = placed_cars.concat(unplaced_cars);
-    return sorted_cars;
-}
 
-function get_parents(possible_parents) {
-    var selected_parents = [];
-    for (var i = 0; i < LAMBDA; i++) {
-        do {
-            var random_ix = Math.floor(Math.random() * MU);
-        } while (selected_parents.includes(random_ix))
-        selected_parents.push(possible_parents[random_ix]);
+    //test
+    stochastically_sorted_cars = [];
+    for (i=0; sorted_cars.length; i++) {
+        index = Math.floor(Math.pow(Math.random(), 1.5) * sorted_cars.length);
+        stochastically_sorted_cars.push(sorted_cars[index])
+        sorted_cars.splice(index, 1);
     }
-    return selected_parents;
-}
-
-function get_children(parents) {
-    var children = []
-    for (i=0; i < parents.length; i++) {
-        children.push(create_child(mutate(parents[i].options)));
-    }
-    return children;
+    return stochastically_sorted_cars;
 }
 
 function do_evolution(population) {
@@ -193,8 +185,21 @@ function do_evolution(population) {
 
     prev_parents = all_sorted_population.slice(0, MU);
 
-    parents = get_parents(prev_parents);
-    children = get_children(parents);
+    var children = []
+    var selected_parents = [];
+    for (var i = 0; i < LAMBDA; i++) {
+        do {
+            var random_ix = Math.floor(Math.random() * MU);
+        } while (selected_parents.includes(random_ix))
+        selected_parents.push(random_ix);
+
+        var parent = prev_parents[random_ix];
+        children.push(
+            create_child(
+                mutate(parent.options)
+            )
+        );
+    }
 
     var mean = 0;
     for (var i = 0; i < prev_parents.length; i++) {
