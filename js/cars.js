@@ -29,14 +29,14 @@ class Track {
         var last_y = 0;
         var prev_angle = 0;
 
-        var line = new Line(last_x, last_y, START_PLATFORM_LENGTH, -Math.PI / 12);
+        var line = new Line(last_x, last_y, START_PLATFORM_LENGTH, 0);
         lines.push(line);
 
         for (var i = 0; i < numberOfLines; i++){
             [last_x, last_y] = line.get_endpoint();
 
             do {
-                var angle = Math.random() * 2 * MAX_ANGLE_RAD - MAX_ANGLE_RAD;
+                var angle = (Math.random() * 2 * MAX_ANGLE_RAD - MAX_ANGLE_RAD) * (i+5)/(numberOfLines+5);
             } while (Math.abs(prev_angle - angle) > MAX_ANGLE_CHANGE_RAD);
             prev_angle = angle;
             line = new Line(last_x, last_y, PLATFORM_LENGTH, angle);
@@ -270,9 +270,6 @@ class Car {
 
     add_to_world(world) {
         this.world = world;
-
-        // x=2 not to hit the first platform
-        var car_position = START_POSITION;
 
         // Create chassis for our car
         var chassis = new CarChassis({
