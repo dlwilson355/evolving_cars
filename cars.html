@@ -22,16 +22,16 @@
     <script>
         cars_options = initial_population(START_POP_SIZE);
         // a dictionary containing arrays with data useful for generating charts
-        var hist = {'track_length': [], 'average_distance': [], 'proportion_completed': []}; 
+        var hist = {'track_length': [], 'average_distance': [], 'proportion_completed_track': [], 'average_proportion_of_track_completed': []}; 
         var app = new p2.WebGLRenderer(function() {
             console.log("Generation");
             console.log(hist['average_distance'].length);
             if (hist['average_distance'].length == GENERATIONS_TO_SAVE_CSV) {
                 let csvContent = "data:text/csv;charset=utf-8,";
-                csvContent += "generation,track_length,average_distance,proportion_completed\n"
+                csvContent += "generation,track_length,average_distance,proportion_completed_track,average_proportion_of_track_completed\n"
                 for (i=0; i<hist['average_distance'].length; i++) {
                     console.log(csvContent);
-                    csvContent += i + "," + hist['track_length'][i] + "," + hist['average_distance'][i] + "," + hist['proportion_completed'][i] + "\n";
+                    csvContent += i + "," + hist['track_length'][i] + "," + hist['average_distance'][i] + "," + hist['proportion_completed_track'][i] + "," + hist['average_proportion_of_track_completed'][i] + "\n";
                 }
                 var encodedUri = encodeURI(csvContent);
                 var link = document.createElement("a");
@@ -149,7 +149,8 @@
                 }
                 hist['track_length'].push(track.length);
                 hist['average_distance'].push(distances.reduce(function getSum(total, num) {return total + num;})/distances.length);
-                hist['proportion_completed'].push(placed.reduce(function getSum(total, num) {return total + num;})/placed.length);
+                hist['proportion_completed_track'].push(placed.reduce(function getSum(total, num) {return total + num;})/placed.length);
+                hist['average_proportion_of_track_completed'].push(hist['average_distance'][hist['average_distance'].length-1] / hist['track_length'][hist['track_length'].length-1])
                 if (skip_start_time > 0) {
                     console.log('Skip duration (msec.):', Date.now() - skip_start_time);
                 }

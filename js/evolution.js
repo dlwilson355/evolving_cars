@@ -22,8 +22,8 @@ function get_initial_options(N, max_length=1, max_angle_step_frac=8, max_length_
         options['angles_lengths']['data'].push(Math.random() * (ANGLE_BOUNDS[1] - ANGLE_BOUNDS[0]) + ANGLE_BOUNDS[0]); // angle
         options['angles_lengths']['data'].push(Math.random() * (LENGTH_BOUNDS[1] - LENGTH_BOUNDS[0]) + LENGTH_BOUNDS[0]); // length
 
-        options['angles_lengths']['step_sizes'].push(Math.random() * Math.PI / max_angle_step_frac);
-        options['angles_lengths']['step_sizes'].push(Math.random() * max_length / max_length_step_frac)
+        options['angles_lengths']['step_sizes'].push(Math.random() * MAX_ANGLE_STEP);
+        options['angles_lengths']['step_sizes'].push(Math.random() * MAX_LENGTH_STEP);
     }
 
     // wheel positions
